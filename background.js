@@ -1,11 +1,13 @@
 // Create an alarm when the extension starts
 chrome.runtime.onStartup.addListener(() => {
     createAlarm();
+    setupDataFetching();
 });
 
 // Also create an alarm when the extension is installed
 chrome.runtime.onInstalled.addListener(() => {
     createAlarm();
+    setupDataFetching();
 });
 
 // Function to create or update the alarm
@@ -85,15 +87,16 @@ function setCloseDateToEndOfDay(closeDate) {
 
 async function checkIPOConditions() {
 	   console.log('Checking IPO conditions...');
+    await fetchTableData();
     const data = await chrome.storage.local.get(['settings', 'ipoData']);
 	   console.log('Retrieved settings:', data.settings);
     console.log('Retrieved IPO data:', data.ipoData);
     
     const settings = data.settings || {
         minListingPercent: 25,
-        checkInterval: 0.02,
+        checkInterval: 0.2,
         startTime: '06:00',
-        endTime: '16:00'
+        endTime: '21:00'
     };
     
     if (!isWithinMarketHours(settings)){
@@ -140,3 +143,63 @@ chrome.storage.onChanged.addListener((changes) => {
 // Run initial check
 console.log('Extension initialized');
 checkIPOConditions();
+
+async function fetchTableData() {
+    try {
+        const response = await fetch('https://www.investorgain.com/report/live-ipo-gmp/331/', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        const html = await response.text();
+
+        const parseTableData = (htmlString) => {
+            const tableStart = htmlString.indexOf("id='mainTable'");
+            if (tableStart === -1) return [];
+
+            let tableEnd = htmlString.indexOf('</table>', tableStart);
+            const tableHtml = htmlString.slice(tableStart, tableEnd + 8);
+
+            const headerStart = tableHtml.indexOf('<th');
+            const headerEnd = tableHtml.indexOf('</tr>', headerStart);
+            const headerRow = tableHtml.slice(headerStart, headerEnd);
+            const headers = headerRow.match(/<th[^>]*>(.*?)<\/th>/gs)
+                ?.map(th => th.replace(/<[^>]*>/g, '').trim()) || [];
+
+            const rows = tableHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gs)?.slice(1) || [];
+
+            return rows.map(row => {
+                const cells = row.match(/<td[^>]*>(.*?)<\/td>/gs) || [];
+                const rowData = {};
+                headers.forEach((header, index) => {
+                    if (cells[index]) {
+                        rowData[header] = cells[index].replace(/<[^>]*>/g, '').trim();
+                    }
+                });
+                return rowData;
+            }).filter(row => Object.keys(row).length > 0);
+        };
+
+        const ipoData = parseTableData(html);
+        console.log('Parsed IPO data:', ipoData);
+        await chrome.storage.local.set({ ipoData });
+        return ipoData;
+    } catch (error) {
+        console.error('Error fetching IPO data:', error);
+        return [];
+    }
+}
+
+async function setupDataFetching() {
+    await fetchTableData();
+    chrome.alarms.create('fetchData', { periodInMinutes: 60 });
+}
+
+// Add this listener for settings changes
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'SETTINGS_UPDATED') {
+        console.log('Settings updated, restarting checks...');
+        createAlarm(); // Recreate alarm with new interval
+        checkIPOConditions(); // Immediate check with new settings
+    }
+});
