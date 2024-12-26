@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+<head>
+    <title>IPO GMP Tracker</title>
+    <style>
+        body {
+            width: 600px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .settings {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        .settings input {
+            width: 60px;
+        }
+        .settings label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings">
+        <h3>IPO Notifier Settings</h3>
+        <div>
+            <label>Minimum Est. Listing %:</label>
+            <input type="number" id="minListingPercent" step="0.01">
+        </div>
+        <div>
+            <label>Check Interval (hours):</label>
+            <input type="number" id="checkInterval" step="0.5">
+        </div>
+        <div>
+            <label>Market Start Time:</label>
+            <input type="time" id="startTime">
+        </div>
+        <div>
+            <label>Market End Time:</label>
+            <input type="time" id="endTime">
+        </div>
+        <button id="saveSettings">Save Settings</button>
+    </div>
+    <table id="ipoTable">
+        <thead>
+            <tr>
+                <th>IPO Name</th>
+                <th>Price</th>
+                <th>GMP(₹)</th>
+                <th>Est Listing</th>
+                <th>Open</th>
+                <th>Close</th>
+                <th>Listing</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody id="ipoTableBody"></tbody>
+    </table>
+    <script src="popup.js"></script>
+</body>
+</html>

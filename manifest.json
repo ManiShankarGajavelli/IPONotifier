@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "IPO GMP Tracker",
+  "version": "1.0",
+  "description": "Track IPO GMP and get notifications",
+  "permissions": [
+    "storage", 
+    "notifications", 
+    "alarms",
+    "scripting",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.investorgain.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
