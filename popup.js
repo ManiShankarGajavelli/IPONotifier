@@ -1,9 +1,9 @@
 // Default settings
 const DEFAULT_SETTINGS = {
     minListingPercent: 25,
-    checkInterval: 0.02,
+    checkInterval: 0.2,
     startTime: '06:00',
-    endTime: '16:00'
+    endTime: '21:00'
 };
 
 // Load settings and data when popup opens
@@ -33,6 +33,7 @@ document.getElementById('saveSettings').addEventListener('click', async () => {
     };
 
     await chrome.storage.local.set({ settings });
+    chrome.runtime.sendMessage({ type: 'SETTINGS_UPDATED' });
     alert('Settings saved!');
 });
 
@@ -86,4 +87,9 @@ async function updateIpoTable() {
         `;
         tbody.appendChild(row);
     });
+}
+
+// Add this to enable popup debugging
+if (chrome.runtime.getManifest().manifest_version === 3) {
+    chrome.runtime.connect({ name: 'popup' });
 }
